@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卓蘭風土，四季成箱 | 苗栗文青鮮果禮盒</title>
+    
+    <!-- 引入字體：Noto Serif TC (襯線), Noto Sans TC (無襯線), Caveat (手寫) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Noto+Sans+TC:wght@300;400;500&family=Noto+Serif+TC:wght@500;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brand-oat': '#F8F6F0',   // 燕麥底色，更有文青紙張感
+                        'brand-green': '#5E8B4C', // 更飽和、明亮的草綠色
+                        'brand-green-dark': '#2B4A22', // 深邃墨綠，用於主要文字
+                        'brand-yellow': '#F4D03F', // 明黃色點綴
+                        // 季節色調微調，使其與新綠色/黃色搭配
+                        'season-spring': '#E89090',
+                        'season-summer': '#7A5C96',
+                        'season-autumn': '#D68930',
+                        'season-winter': '#E66A19',
+                    },
+                    fontFamily: {
+                        'sans': ['"Noto Sans TC"', 'sans-serif'],
+                        'serif': ['"Noto Serif TC"', 'serif'],
+                        'handwriting': ['"Caveat"', 'cursive'],
+                    },
+                    boxShadow: {
+                        'soft': '0 10px 40px -10px rgba(43, 74, 34, 0.08)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* 基礎設定與紙張質感背景 */
+        body {
+            background-color: #F8F6F0;
+            color: #2B4A22;
+            background-image: 
+                radial-gradient(#E2DEC6 1px, transparent 1px),
+                radial-gradient(#E2DEC6 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+        }
+
+        /* 隱藏與淡入動畫 */
+        .fade-in-section {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 1s ease-out, transform 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+            will-change: opacity, transform;
+        }
+        .fade-in-section.is-visible {
+            opacity: 1;
+            transform: none;
+        }
+
+        /* 標題畫線裝飾 (文青感) */
+        .highlight-yellow {
+            position: relative;
+            display: inline-block;
+            z-index: 1;
+        }
+        .highlight-yellow::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: -2%;
+            width: 104%;
+            height: 40%;
+            background-color: #F4D03F;
+            z-index: -1;
+            opacity: 0.6;
+            transform: rotate(-1deg);
+            transition: height 0.3s ease;
+        }
+        .highlight-yellow:hover::after {
+            height: 60%;
+        }
+
+        /* 季節分頁切換 */
+        .season-tab {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+        .season-tab::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -15px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: currentColor;
+            transform: translateY(-50%) scale(0);
+            transition: transform 0.3s ease;
+        }
+        .season-tab.active {
+            font-weight: 700;
+        }
+        .season-tab.active::before {
+            transform: translateY(-50%) scale(1);
+        }
+        
+        .tab-spring.active { color: #E89090; }
+        .tab-summer.active { color: #7A5C96; }
+        .tab-autumn.active { color: #D68930; }
+        .tab-winter.active { color: #E66A19; }
+
+        .season-content {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        .season-content.active {
+            display: grid;
+            animation: fadeInContent 0.8s ease forwards;
+        }
+        @keyframes fadeInContent {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 購物車動畫 */
+        #cart-drawer {
+            transform: translateX(100%);
+            transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1); /* 更滑順的彈出 */
+        }
+        #cart-drawer.open { transform: translateX(0); }
+        
+        #cart-overlay {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(2px);
+        }
+        #cart-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* 加入購物車粒子特效 */
+        .particle {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            animation: particleAnimation 0.8s cubic-bezier(0.2, 1, 0.3, 1) forwards;
+        }
+        @keyframes particleAnimation {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0.2); opacity: 0; }
+        }
+        
+        /* 垂直文字裝飾 */
+        .vertical-text {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+        }
+    </style>
+</head>
+<body class="antialiased overflow-x-hidden">
+
+    <!-- 導覽列 -->
+    <nav class="fixed w-full z-40 bg-brand-oat/90 backdrop-blur-sm border-b border-brand-green/10 transition-all duration-300 py-2">
+        <div class="max-w-7xl mx-auto px-6 lg:px-12 flex justify-between items-center h-16">
+            <div class="flex items-center cursor-pointer group" onclick="window.scrollTo(0,0)">
+                <div class="w-8 h-8 bg-brand-green rounded-full flex items-center justify-center mr-3 relative overflow-hidden group-hover:bg-brand-yellow transition-colors duration-500">
+                    <span class="text-white text-xs font-serif font-bold relative z-10">卓</span>
+                </div>
+                <span class="font-serif text-xl font-bold tracking-widest text-brand-green-dark">卓蘭四季</span>
+            </div>
+            
+            <div class="hidden md:flex space-x-12">
+                <a href="#story" class="text-sm font-medium hover:text-brand-green transition-colors">產地誌</a>
+                <a href="#seasonal" class="text-sm font-medium hover:text-brand-green transition-colors">風土箱</a>
+                <a href="#detail" class="text-sm font-medium hover:text-brand-green transition-colors">包裝設計</a>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <button id="cart-toggle-btn" class="relative p-2 text-brand-green-dark hover:text-brand-green transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                    <span id="cart-count" class="absolute top-0 right-0 w-4 h-4 bg-brand-yellow text-brand-green-dark text-[10px] font-bold rounded-full flex items-center justify-center transform translate-x-1 -translate-y-1 hidden shadow-sm">0</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 購物車遮罩與抽屜 -->
+    <div id="cart-overlay" class="fixed inset-0 bg-brand-green-dark/20 z-50"></div>
+    <div id="cart-drawer" class="fixed top-0 right-0 h-full w-full sm:w-[400px] bg-brand-oat shadow-2xl z-50 flex flex-col border-l border-brand-green/20">
+        <div class="p-6 border-b border-brand-green/10 flex justify-between items-center bg-white/50">
+            <h2 class="text-xl font-serif font-bold flex items-center gap-2">
+                <span class="w-2 h-2 bg-brand-yellow rounded-full"></span>
+                採集籃
+            </h2>
+            <button id="close-cart-btn" class="p-2 hover:text-brand-green transition-colors hover:rotate-90 duration-300">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        
+        <div id="cart-items" class="flex-1 overflow-y-auto p-6">
+            <div id="empty-cart-msg" class="h-full flex flex-col items-center justify-center text-brand-green-dark/50 gap-4">
+                <svg class="w-12 h-12 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                <p class="font-serif text-sm">尚未放入任何果實</p>
+            </div>
+            <ul id="cart-list" class="space-y-6 hidden"></ul>
+        </div>
+
+        <div class="p-6 bg-white border-t border-brand-green/10">
+            <div class="flex justify-between items-end mb-6">
+                <span class="text-sm text-brand-green-dark/70">總計</span>
+                <span id="cart-total" class="text-2xl font-serif font-bold text-brand-green">NT$ 0</span>
+            </div>
+            <button id="checkout-btn" class="w-full bg-brand-green-dark text-white py-4 rounded-xl hover:bg-brand-green transition-colors font-medium flex justify-center items-center gap-2 opacity-50 cursor-not-allowed disabled">
+                前往結帳
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Hero 區塊 -->
+    <header class="relative min-h-[90vh] flex items-center pt-20 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6 lg:px-12 w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
+            
+            <div class="order-2 lg:order-1 fade-in-section pt-10 lg:pt-0">
+                <p class="font-handwriting text-brand-green text-2xl mb-4 transform -rotate-2">Fresh from Zhuolan</p>
+                <h1 class="text-5xl lg:text-7xl font-serif font-black leading-[1.1] mb-6 text-brand-green-dark">
+                    卓蘭風土，<br/>
+                    <span class="highlight-yellow">四季成箱。</span>
+                </h1>
+                <p class="text-lg text-brand-green-dark/80 font-light leading-relaxed mb-10 max-w-md">
+                    大安溪的風，日夜溫差的淬鍊。<br/>
+                    我們不追求量產，只在最適切的時節，將最有生命力的果實裝進盒子裡。
+                </p>
+                <a href="#seasonal" class="inline-flex items-center gap-3 bg-brand-green text-white px-8 py-4 rounded-full font-medium hover:bg-brand-green-dark transition-all duration-300 shadow-soft hover:shadow-lg transform hover:-translate-y-1">
+                    挑選當季禮盒
+                    <span class="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">↓</span>
+                </a>
+            </div>
+
+            <div class="order-1 lg:order-2 relative fade-in-section h-[50vh] lg:h-[70vh]">
+                <!-- 主圖形狀裁切 -->
+                <div class="absolute inset-0 rounded-[3rem] overflow-hidden shadow-soft transform lg:rotate-2 hover:rotate-0 transition-transform duration-700 border-8 border-white">
+                    <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=1000" alt="卓蘭果園" class="w-full h-full object-cover scale-105" />
+                    <!-- 輕微遮罩 -->
+                    <div class="absolute inset-0 bg-brand-green-dark/10 mix-blend-multiply"></div>
+                </div>
+                <!-- 文青裝飾：黃色圓形標籤 -->
+                <div class="absolute -bottom-6 -left-6 w-32 h-32 bg-brand-yellow rounded-full flex items-center justify-center shadow-lg transform rotate-12 z-20">
+                    <div class="text-center">
+                        <span class="block text-brand-green-dark font-bold text-lg">100%</span>
+                        <span class="block text-brand-green-dark font-serif text-xs">產地直達</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 側邊垂直文字裝飾 -->
+        <div class="absolute right-8 top-1/2 -translate-y-1/2 vertical-text text-brand-green/30 font-serif text-xl tracking-[0.5em] hidden lg:block uppercase">
+            Miaoli Zhuolan
+        </div>
+    </header>
+
+    <!-- 產地誌 (Story) -->
+    <section id="story" class="py-32 relative">
+        <div class="max-w-7xl mx-auto px-6 lg:px-12">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-12 items-start">
+                
+                <div class="md:col-span-5 fade-in-section sticky top-32">
+                    <div class="flex items-center gap-4 mb-6">
+                        <span class="w-12 h-[1px] bg-brand-green"></span>
+                        <span class="font-serif text-brand-green font-bold tracking-widest text-sm">產地誌</span>
+                    </div>
+                    <h2 class="text-3xl md:text-4xl font-serif font-bold leading-snug mb-8">
+                        孕育自大安溪的<br/>純淨果香。
+                    </h2>
+                    <div class="bg-white p-8 rounded-2xl shadow-soft border-l-4 border-brand-yellow relative">
+                        <svg class="absolute top-4 right-4 w-8 h-8 text-brand-oat" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
+                        <p class="font-serif text-lg leading-relaxed text-brand-green-dark/90 italic relative z-10">
+                            「不求產量最多，只求在最對的時間，把最好的風味封存進這個盒子裡，交到你的手上。」
+                        </p>
+                    </div>
+                </div>
+
+                <div class="md:col-span-6 md:col-start-7 fade-in-section space-y-10 mt-12 md:mt-0">
+                    <p class="text-lg font-light leading-loose text-brand-green-dark/80">
+                        卓蘭，一個被山水擁抱的小鎮。白天，陽光毫無保留地灑落；夜晚，大安溪的涼風帶來溫差。這樣的地理條件，是老天爺賞賜的水果溫床。
+                    </p>
+                    <p class="text-lg font-light leading-loose text-brand-green-dark/80">
+                        我們堅持「草生栽培」，讓果園保持最自然的生態平衡。農人們的雙手沾滿泥土，用心呵護每一株果樹。我們深信，唯有尊重土地，土地才會回饋最真實的甜美。
+                    </p>
+                    <div class="grid grid-cols-2 gap-6 pt-6">
+                        <div class="rounded-2xl overflow-hidden aspect-square">
+                            <img src="https://images.unsplash.com/photo-1595856417533-3d027b4097f4?auto=format&fit=crop&q=80&w=400" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" alt="農作日常"/>
+                        </div>
+                        <div class="rounded-2xl overflow-hidden aspect-square mt-8">
+                            <img src="https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&q=80&w=400" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" alt="果實特寫"/>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- 四季風土箱 -->
+    <section id="seasonal" class="py-32 bg-white relative overflow-hidden">
+        <!-- 裝飾背景色塊 -->
+        <div class="absolute top-0 right-0 w-1/2 h-full bg-brand-oat/50 rounded-l-[100px] z-0"></div>
+        
+        <div class="max-w-7xl mx-auto px-6 lg:px-12 relative z-10">
+            <div class="text-center mb-16 fade-in-section">
+                <h2 class="text-4xl font-serif font-bold text-brand-green-dark mb-4">選取時令的甘甜</h2>
+                <p class="text-brand-green-dark/60 font-light">依照大自然的節奏，為您準備當季專屬的文創鮮果禮盒。</p>
+            </div>
+
+            <!-- 季節導覽 -->
+            <div class="flex justify-center gap-8 md:gap-16 mb-20 fade-in-section">
+                <button class="season-tab tab-spring active text-xl font-serif text-brand-green-dark/40 hover:text-season-spring focus:outline-none flex flex-col items-center gap-2" data-target="spring">
+                    <span class="text-3xl opacity-80">🌸</span>春桃
+                </button>
+                <button class="season-tab tab-summer text-xl font-serif text-brand-green-dark/40 hover:text-season-summer focus:outline-none flex flex-col items-center gap-2" data-target="summer">
+                    <span class="text-3xl opacity-80">🍇</span>夏葡
+                </button>
+                <button class="season-tab tab-autumn text-xl font-serif text-brand-green-dark/40 hover:text-season-autumn focus:outline-none flex flex-col items-center gap-2" data-target="autumn">
+                    <span class="text-3xl opacity-80">🍐</span>秋梨
+                </button>
+                <button class="season-tab tab-winter text-xl font-serif text-brand-green-dark/40 hover:text-season-winter focus:outline-none flex flex-col items-center gap-2" data-target="winter">
+                    <span class="text-3xl opacity-80">🍊</span>冬橘
+                </button>
+            </div>
+
+            <!-- 春季內容 -->
+            <div id="spring" class="season-content active grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
+                <div class="relative group">
+                    <div class="absolute -inset-4 bg-season-spring/10 rounded-[3rem] transform -rotate-3 transition-transform group-hover:rotate-0"></div>
+                    <img src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&q=80&w=800" alt="紅玉水蜜桃" class="relative z-10 rounded-[2.5rem] w-full aspect-[4/3] object-cover shadow-soft" />
+                </div>
+                <div class="px-4 lg:px-0">
+                    <div class="inline-block px-3 py-1 bg-season-spring/15 text-season-spring text-xs font-bold rounded-full mb-4 tracking-wider">SPRING BOX</div>
+                    <h3 class="text-4xl font-serif font-bold text-brand-green-dark mb-6">春之呢喃 ‧ 紅玉水蜜桃</h3>
+                    <p class="text-lg text-brand-green-dark/70 font-light leading-relaxed mb-8">
+                        初春的溫柔，盡在此盒。果皮透著迷人的胭脂紅，果肉細緻多汁，香氣濃郁撲鼻。每一口都是春天甦醒的味道。
+                    </p>
+                    <div class="bg-brand-oat rounded-2xl p-6 mb-8 border border-white">
+                        <ul class="space-y-3 font-light text-brand-green-dark/80">
+                            <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 bg-season-spring rounded-full"></span>嚴選 5-6 顆特大果 (約1.5kg)</li>
+                            <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 bg-season-spring rounded-full"></span>附贈「春日花見」限定書籤</li>
+                        </ul>
+                    </div>
+                    <div class="flex items-end gap-6">
+                        <div>
+                            <p class="text-sm text-brand-green-dark/40 line-through mb-1">NT$ 1,480</p>
+                            <p class="text-3xl font-serif font-bold text-season-spring">NT$ 1,280</p>
+                        </div>
+                        <button class="add-to-cart-btn flex-1 bg-brand-green-dark text-white py-4 rounded-xl hover:bg-season-spring transition-colors font-medium flex justify-center items-center gap-2"
+                                data-id="box-spring" data-name="春之呢喃 ‧ 水蜜桃" data-price="1280" data-image="https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&q=80&w=150" data-color="#E89090">
+                            加入採集籃
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 夏季內容 -->
+            <div id="summer" class="season-content grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
+                <div class="relative group">
+                    <div class="absolute -inset-4 bg-season-summer/10 rounded-[3rem] transform rotate-3 transition-transform group-hover:rotate-0"></div>
+                    <img src="https://images.unsplash.com/photo-1590868309235-ea34bed7bd7f?auto=format&fit=crop&q=80&w=800" alt="巨峰葡萄" class="relative z-10 rounded-[2.5rem] w-full aspect-[4/3] object-cover shadow-soft" />
+                </div>
+                <div class="px-4 lg:px-0">
+                    <div class="inline-block px-3 py-1 bg-season-summer/15 text-season-summer text-xs font-bold rounded-full mb-4 tracking-wider">SUMMER BOX</div>
+                    <h3 class="text-4xl font-serif font-bold text-brand-green-dark mb-6">夏之熱情 ‧ 巨峰葡萄</h3>
+                    <p class="text-lg text-brand-green-dark/70 font-light leading-relaxed mb-8">
+                        吸收滿滿夏日豔陽的精華。紫黑色的寶石，果粒碩大、果粉均勻。冰涼後食用，是夏天最頂級的享受。
+                    </p>
+                    <div class="bg-brand-oat rounded-2xl p-6 mb-8 border border-white">
+                        <ul class="space-y-3 font-light text-brand-green-dark/80">
+                            <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 bg-season-summer rounded-full"></span>特級 4 串入 (約 2 公斤)</li>
+                            <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 bg-season-summer rounded-full"></span>附贈「夏夜星空」插畫明信片</li>
+                        </ul>
+                    </div>
+                    <div class="flex items-end gap-6">
+                        <div class="pb-1">
+                            <p class="text-3xl font-serif font-bold text-season-summer">NT$ 1,080</p>
+                        </div>
+                        <button class="add-to-cart-btn flex-1 bg-brand-green-dark text-white py-4 rounded-xl hover:bg-season-summer transition-colors font-medium flex justify-center items-center gap-2"
+                                data-id="box-summer" data-name="夏之熱情 ‧ 巨峰葡萄" data-price="1080" data-image="https://images.unsplash.com/photo-1590868309235-ea34bed7bd7f?auto=format&fit=crop&q=80&w=150" data-color="#7A5C96">
+                            加入採集籃
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 秋季內容 -->
+            <div id="autumn" class="season-content grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
+                <div class="relative group">
+                    <div class="absolute -inset-4 bg-season-autumn/10 rounded-[3rem] transform -rotate-3 transition-transform group-hover:rotate-0"></div>
+                    <img src="https://images.unsplash.com/photo-1601002360565-d6029514f77c?auto=format&fit=crop&q=80&w=800" alt="新興梨" class="relative z-10 rounded-[2.5rem] w-full aspect-[4/3] object-cover shadow-soft" />
+                </div>
+                <div class="px-4 lg:px-0">
+                    <div class="inline-block px-3 py-1 bg-season-autumn/15 text-season-autumn text-xs font-bold rounded-full mb-4 tracking-wider">AUTUMN BOX</div>
+                    <h3 class="text-4xl font-serif font-bold text-brand-green-dark mb-6">秋之豐收 ‧ 新興梨</h3>
+                    <p class="text-lg text-brand-green-dark/70 font-light leading-relaxed mb-8">
+                        秋高氣爽，正是品嚐水梨的好時節。果型圓潤飽滿，果肉清脆爽口，水分極多。中秋佳節，傳遞心意最圓滿的選擇。
+                    </p>
+                    <div class="bg-brand-oat rounded-2xl p-6 mb-8 border border-white">
+                        <ul class="space-y-3 font-light text-brand-green-dark/80">
+                            <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 bg-season-autumn rounded-full"></span>嚴選 6-8 顆入特級果</li>
+                            <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 bg-season-autumn rounded-full"></span>附贈「秋收月圓」木作杯墊</li>
+                        </ul>
+                    </div>
+                    <div class="flex items-end gap-6">
+                        <div class="pb-1">
+                            <p class="text-3xl font-serif font-bold text-season-autumn">NT$ 1,380</p>
+                        </div>
+                        <button class="add-to-cart-btn flex-1 bg-brand-green-dark text-white py-4 rounded-xl hover:bg-season-autumn transition-colors font-medium flex justify-center items-center gap-2"
+                                data-id="box-autumn" data-name="秋之豐收 ‧ 新興梨" data-price="1380" data-image="https://images.unsplash.com/photo-1601002360565-d6029514f77c?auto=format&fit=crop&q=80&w=150" data-color="#D68930">
+                            加入採集籃
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 冬季內容 -->
+            <div id="winter" class="season-content grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
+                <div class="relative group">
+                    <div class="absolute -inset-4 bg-season-winter/10 rounded-[3rem] transform rotate-3 transition-transform group-hover:rotate-0"></div>
+                    <img src="https://images.unsplash.com/photo-1611080556947-fdb7020fb4be?auto=format&fit=crop&q=80&w=800" alt="茂谷柑" class="relative z-10 rounded-[2.5rem] w-full aspect-[4/3] object-cover shadow-soft" />
+                </div>
+                <div class="px-4 lg:px-0">
+                    <div class="inline-block px-3 py-1 bg-season-winter/15 text-season-winter text-xs font-bold rounded-full mb-4 tracking-wider">WINTER BOX</div>
+                    <h3 class="text-4xl font-serif font-bold text-brand-green-dark mb-6">冬之溫暖 ‧ 茂谷柑</h3>
+                    <p class="text-lg text-brand-green-dark/70 font-light leading-relaxed mb-8">
+                        過年前夕的橘紅喜氣。皮薄汁多，糖酸比完美平衡，散發獨特柑橘香氣。大吉大利，為冷冬帶來最溫暖的祝福。
+                    </p>
+                    <div class="bg-brand-oat rounded-2xl p-6 mb-8 border border-white">
+                        <ul class="space-y-3 font-light text-brand-green-dark/80">
+                            <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 bg-season-winter rounded-full"></span>嚴選 27A 等級 12 顆入</li>
+                            <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 bg-season-winter rounded-full"></span>附贈「迎春納福」斗方春聯</li>
+                        </ul>
+                    </div>
+                    <div class="flex items-end gap-6">
+                        <div class="pb-1">
+                            <p class="text-3xl font-serif font-bold text-season-winter">NT$ 980</p>
+                        </div>
+                        <button class="add-to-cart-btn flex-1 bg-brand-green-dark text-white py-4 rounded-xl hover:bg-season-winter transition-colors font-medium flex justify-center items-center gap-2"
+                                data-id="box-winter" data-name="冬之溫暖 ‧ 茂谷柑" data-price="980" data-image="https://images.unsplash.com/photo-1611080556947-fdb7020fb4be?auto=format&fit=crop&q=80&w=150" data-color="#E66A19">
+                            加入採集籃
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- 包裝細節 -->
+    <section id="detail" class="py-32 bg-brand-oat">
+        <div class="max-w-7xl mx-auto px-6 lg:px-12">
+            <div class="text-center mb-20 fade-in-section">
+                <h2 class="text-3xl md:text-4xl font-serif font-bold text-brand-green-dark mb-4">不只是紙箱，是風土的展場</h2>
+                <p class="text-brand-green-dark/60 font-light">包裝亦是傳遞價值的媒介，融合環保理念與文創插畫。</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-10 rounded-3xl shadow-sm hover:shadow-soft transition-all duration-300 fade-in-section group">
+                    <div class="w-14 h-14 bg-brand-yellow/20 rounded-full flex items-center justify-center mb-6 text-brand-yellow group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    </div>
+                    <h4 class="text-xl font-serif font-bold mb-3 text-brand-green-dark">在地藝術插畫</h4>
+                    <p class="text-brand-green-dark/60 font-light text-sm leading-relaxed">外箱印有在地藝術家繪製的農作景緻，宛如微型畫作，充滿童趣與收藏價值。</p>
+                </div>
+                
+                <div class="bg-white p-10 rounded-3xl shadow-sm hover:shadow-soft transition-all duration-300 fade-in-section group" style="transition-delay: 100ms;">
+                    <div class="w-14 h-14 bg-brand-green/20 rounded-full flex items-center justify-center mb-6 text-brand-green group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+                    </div>
+                    <h4 class="text-xl font-serif font-bold mb-3 text-brand-green-dark">FSC 環保紙材</h4>
+                    <p class="text-brand-green-dark/60 font-light text-sm leading-relaxed">採用對森林友善的瓦楞紙材，無多餘塑料淋膜，愛護地球，減少環境負擔。</p>
+                </div>
+
+                <div class="bg-white p-10 rounded-3xl shadow-sm hover:shadow-soft transition-all duration-300 fade-in-section group" style="transition-delay: 200ms;">
+                    <div class="w-14 h-14 bg-brand-oat rounded-full flex items-center justify-center mb-6 text-brand-green-dark group-hover:scale-110 transition-transform border border-brand-green/10">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                    </div>
+                    <h4 class="text-xl font-serif font-bold mb-3 text-brand-green-dark">防撞立體結構</h4>
+                    <p class="text-brand-green-dark/60 font-light text-sm leading-relaxed">內部採用獨家設計卡榫，取代傳統塑膠泡棉網，像搖籃般安穩保護嬌弱果實。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 頁尾 -->
+    <footer class="bg-brand-green-dark text-white py-16">
+        <div class="max-w-7xl mx-auto px-6 lg:px-12">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-8 border-b border-white/10 pb-12">
+                
+                <div class="text-center md:text-left">
+                    <div class="flex items-center justify-center md:justify-start gap-2 mb-2">
+                        <span class="w-6 h-6 bg-brand-yellow text-brand-green-dark rounded-full flex items-center justify-center text-xs font-serif font-bold">卓</span>
+                        <span class="font-serif text-2xl font-bold tracking-widest">卓蘭四季</span>
+                    </div>
+                    <p class="text-white/50 text-sm font-light">從產地到餐桌，傳遞一整年的甜美與祝福。</p>
+                </div>
+                
+                <div class="flex space-x-6">
+                    <a href="#" class="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/70 hover:bg-brand-green hover:text-white hover:border-brand-green transition-all">FB</a>
+                    <a href="#" class="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/70 hover:bg-brand-green hover:text-white hover:border-brand-green transition-all">IG</a>
+                    <a href="#" class="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/70 hover:bg-brand-green hover:text-white hover:border-brand-green transition-all">LINE</a>
+                </div>
+
+            </div>
+            
+            <div class="mt-8 flex justify-between items-center text-xs text-white/40 font-light">
+                <p>&copy; 2026 Zhuolan Four Seasons Box. All rights reserved.</p>
+                <div class="flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 bg-brand-yellow rounded-full"></span>
+                    Miaoli, Taiwan
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. 滾動淡入觀察者
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                    }
+                });
+            }, { threshold: 0.1 });
+            document.querySelectorAll('.fade-in-section').forEach(el => observer.observe(el));
+
+            // 2. 季節切換邏輯
+            const tabs = document.querySelectorAll('.season-tab');
+            const contents = document.querySelectorAll('.season-content');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    contents.forEach(c => {
+                        c.classList.remove('active');
+                        // Reset animation
+                        c.style.animation = 'none';
+                        c.offsetHeight; 
+                        c.style.animation = null;
+                    });
+                    
+                    tab.classList.add('active');
+                    document.getElementById(tab.dataset.target).classList.add('active');
+                });
+            });
+
+            // 3. 購物車邏輯
+            let cart = [];
+            const drawer = document.getElementById('cart-drawer');
+            const overlay = document.getElementById('cart-overlay');
+            const countBadge = document.getElementById('cart-count');
+            const cartList = document.getElementById('cart-list');
+            const emptyMsg = document.getElementById('empty-cart-msg');
+            const totalUI = document.getElementById('cart-total');
+            const checkoutBtn = document.getElementById('checkout-btn');
+
+            function toggleCart() {
+                drawer.classList.toggle('open');
+                overlay.classList.toggle('open');
+                document.body.style.overflow = drawer.classList.contains('open') ? 'hidden' : '';
+            }
+
+            document.getElementById('cart-toggle-btn').addEventListener('click', toggleCart);
+            document.getElementById('close-cart-btn').addEventListener('click', toggleCart);
+            overlay.addEventListener('click', toggleCart);
+
+            function updateCartUI() {
+                const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+                
+                if (totalItems > 0) {
+                    countBadge.textContent = totalItems;
+                    countBadge.classList.remove('hidden');
+                    countBadge.classList.add('animate-bounce'); // 簡單的提醒動畫
+                    setTimeout(() => countBadge.classList.remove('animate-bounce'), 1000);
+                } else {
+                    countBadge.classList.add('hidden');
+                }
+
+                cartList.innerHTML = '';
+                if (cart.length === 0) {
+                    emptyMsg.classList.remove('hidden');
+                    cartList.classList.add('hidden');
+                    checkoutBtn.disabled = true;
+                    checkoutBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    totalUI.textContent = 'NT$ 0';
+                } else {
+                    emptyMsg.classList.add('hidden');
+                    cartList.classList.remove('hidden');
+                    checkoutBtn.disabled = false;
+                    checkoutBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    
+                    let totalPrice = 0;
+                    cart.forEach(item => {
+                        totalPrice += item.price * item.quantity;
+                        const li = document.createElement('li');
+                        li.className = 'flex gap-4 p-4 bg-white rounded-2xl border border-brand-green/5 shadow-sm';
+                        li.innerHTML = `
+                            <img src="${item.image}" alt="${item.name}" class="w-20 h-20 object-cover rounded-xl">
+                            <div class="flex-1 flex flex-col justify-between">
+                                <div>
+                                    <h4 class="text-sm font-bold text-brand-green-dark">${item.name}</h4>
+                                    <p class="text-sm font-medium mt-1" style="color: ${item.color}">NT$ ${item.price.toLocaleString()}</p>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <div class="flex items-center bg-brand-oat rounded-lg px-2 py-1">
+                                        <button class="text-brand-green-dark/50 hover:text-brand-green px-1 btn-dec" data-id="${item.id}">-</button>
+                                        <span class="text-xs font-bold w-6 text-center">${item.quantity}</span>
+                                        <button class="text-brand-green-dark/50 hover:text-brand-green px-1 btn-inc" data-id="${item.id}">+</button>
+                                    </div>
+                                    <button class="text-red-300 hover:text-red-500 text-xs underline btn-rm" data-id="${item.id}">移除</button>
+                                </div>
+                            </div>
+                        `;
+                        cartList.appendChild(li);
+                    });
+                    totalUI.textContent = `NT$ ${totalPrice.toLocaleString()}`;
+                }
+
+                // 綁定增減移除事件
+                document.querySelectorAll('.btn-dec').forEach(btn => btn.addEventListener('click', (e) => modifyCart(e.target.dataset.id, -1)));
+                document.querySelectorAll('.btn-inc').forEach(btn => btn.addEventListener('click', (e) => modifyCart(e.target.dataset.id, 1)));
+                document.querySelectorAll('.btn-rm').forEach(btn => btn.addEventListener('click', (e) => removeFromCart(e.target.dataset.id)));
+            }
+
+            function modifyCart(id, delta) {
+                const item = cart.find(i => i.id === id);
+                if (item) {
+                    item.quantity += delta;
+                    if (item.quantity <= 0) cart = cart.filter(i => i.id !== id);
+                    updateCartUI();
+                }
+            }
+            
+            function removeFromCart(id) {
+                cart = cart.filter(i => i.id !== id);
+                updateCartUI();
+            }
+
+            // 加入購物車動畫與邏輯
+            document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    const { id, name, price, image, color } = this.dataset;
+                    
+                    // 1. 粒子飛越動畫
+                    const particle = document.createElement('div');
+                    particle.className = 'particle w-4 h-4';
+                    particle.style.backgroundColor = color;
+                    particle.style.left = `${e.clientX}px`;
+                    particle.style.top = `${e.clientY}px`;
+                    
+                    const cartIcon = document.getElementById('cart-toggle-btn').getBoundingClientRect();
+                    const tx = cartIcon.left - e.clientX + 10;
+                    const ty = cartIcon.top - e.clientY + 10;
+                    particle.style.setProperty('--tx', `${tx}px`);
+                    particle.style.setProperty('--ty', `${ty}px`);
+                    
+                    document.body.appendChild(particle);
+                    setTimeout(() => particle.remove(), 800);
+
+                    // 2. 更新資料
+                    const existingItem = cart.find(item => item.id === id);
+                    if (existingItem) existingItem.quantity += 1;
+                    else cart.push({ id, name, price: parseInt(price), image, color, quantity: 1 });
+
+                    // 3. 按鈕回饋
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '✓ 已收入籃中';
+                    this.classList.add('bg-brand-yellow', 'text-brand-green-dark');
+                    setTimeout(() => {
+                        this.innerHTML = originalText;
+                        this.classList.remove('bg-brand-yellow', 'text-brand-green-dark');
+                    }, 1500);
+
+                    setTimeout(updateCartUI, 400);
+                });
+            });
+
+            checkoutBtn.addEventListener('click', () => {
+                const btnOriginal = checkoutBtn.innerHTML;
+                checkoutBtn.innerHTML = '結帳系統建置中...';
+                setTimeout(() => checkoutBtn.innerHTML = btnOriginal, 2000);
+            });
+        });
+    </script>
+</body>
+</html>
